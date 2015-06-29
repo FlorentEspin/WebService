@@ -88,14 +88,25 @@ namespace WebApiRest.Controllers
         // POST api/Utilisateurs
         public HttpResponseMessage PostUTILISATEUR(UTILISATEUR utilisateur)
         {
-            if (GetUTILISATEUR(utilisateur.ID_UTILISATEUR) != null)
-            {
-              var response =  PutUTILISATEUR(utilisateur.ID_UTILISATEUR, utilisateur);
-              return response;
+            if (utilisateur.ID_UTILISATEUR != -1) 
+            { 
+                if (GetUTILISATEUR(utilisateur.ID_UTILISATEUR) != null )
+                {
+                  var response =  PutUTILISATEUR(utilisateur.ID_UTILISATEUR, utilisateur);
+                  return response;
+                }
             }
-            else
             if (ModelState.IsValid)
             {
+                if (utilisateur.ID_UTILISATEUR == -1)
+                {
+                    int maxValue = 0;
+                    foreach (var item in GetUTILISATEURs())
+	                {
+                        if (maxValue < item.ID_UTILISATEUR) maxValue = item.ID_UTILISATEUR;
+	                }
+                    utilisateur.ID_UTILISATEUR = (maxValue + 1);
+                }
                 db.UTILISATEURs.Add(utilisateur);
          
                 db.SaveChanges();
