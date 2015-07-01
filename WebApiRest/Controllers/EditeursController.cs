@@ -33,6 +33,26 @@ namespace WebApiRest.Controllers
 
             return editeur;
         }
+        [System.Web.Services.WebMethod()]
+        [HttpGet]
+        public EDITEUR GetEDITEUR(string name)
+        {
+            EDITEUR editor = new EDITEUR();
+
+            var editors = GetEDITEURs();
+            foreach (var i in editors)
+            {
+                if (i.NOM_EDITEUR == name) editor = i;
+
+            }
+            if (editor == null || editor.NOM_EDITEUR == null)
+            {
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.NotFound));
+            }
+
+            return editor;
+        }
+
 
         // PUT api/Editeurs/5
         public HttpResponseMessage PutEDITEUR(int id, EDITEUR editeur)
@@ -46,6 +66,9 @@ namespace WebApiRest.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
+            EDITEUR existing = GetEDITEUR(id);
+
+            ((IObjectContextAdapter)db).ObjectContext.Detach(existing);
 
             db.Entry(editeur).State = EntityState.Modified;
 
@@ -64,8 +87,28 @@ namespace WebApiRest.Controllers
         // POST api/Editeurs
         public HttpResponseMessage PostEDITEUR(EDITEUR editeur)
         {
+
+            if (editeur.ID_EDITEUR != -1)
+            {
+                if (GetEDITEUR(editeur.ID_EDITEUR) != null)
+                {
+                    var response = PutEDITEUR(editeur.ID_EDITEUR, editeur);
+                    return response;
+                }
+            }
+
             if (ModelState.IsValid)
             {
+                if (editeur.ID_EDITEUR == -1)
+                {
+                    int maxValue = 0;
+                    foreach (var item in GetEDITEURs())
+                    {
+                        if (maxValue < item.ID_EDITEUR) maxValue = item.ID_EDITEUR;
+                    }
+                    editeur.ID_EDITEUR = (maxValue + 1);
+                }
+
                 db.EDITEURs.Add(editeur);
                 db.SaveChanges();
 
