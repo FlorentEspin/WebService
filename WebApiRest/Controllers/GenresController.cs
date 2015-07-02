@@ -33,6 +33,25 @@ namespace WebApiRest.Controllers
 
             return genre;
         }
+        [System.Web.Services.WebMethod()]
+        [HttpGet]
+        public GENRE GetGENRERbyName(string name)
+        {
+            GENRE genre = new GENRE();
+
+            var genres = GetGENREs();
+            foreach (var i in genres)
+            {
+                if (i.NOM_GENRE == name) genre = i;
+
+            }
+            if (genre == null || genre.NOM_GENRE == null)
+            {
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.NotFound));
+            }
+
+            return genre;
+        }
 
         // PUT api/Genres/5
         public HttpResponseMessage PutGENRE(int id, GENRE genre)
@@ -46,6 +65,9 @@ namespace WebApiRest.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
+            GENRE existing = GetGENRE(id);
+
+            ((IObjectContextAdapter)db).ObjectContext.Detach(existing);
 
             db.Entry(genre).State = EntityState.Modified;
 
@@ -64,8 +86,26 @@ namespace WebApiRest.Controllers
         // POST api/Genres
         public HttpResponseMessage PostGENRE(GENRE genre)
         {
+
+            if (genre.ID_GENRE != -1)
+            {
+                if (GetGENRE(genre.ID_GENRE) != null)
+                {
+                    var response = PutGENRE(genre.ID_GENRE, genre);
+                    return response;
+                }
+            }
             if (ModelState.IsValid)
             {
+                if (genre.ID_GENRE == -1)
+                {
+                    int maxValue = 0;
+                    foreach (var item in GetGENREs())
+                    {
+                        if (maxValue < item.ID_GENRE) maxValue = item.ID_GENRE;
+                    }
+                    genre.ID_GENRE = (maxValue + 1);
+                }
                 db.GENREs.Add(genre);
                 db.SaveChanges();
 

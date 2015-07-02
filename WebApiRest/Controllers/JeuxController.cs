@@ -66,6 +66,9 @@ namespace WebApiRest.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
+            JEU existing = GetJEU(id);
+
+            ((IObjectContextAdapter)db).ObjectContext.Detach(existing);
 
             db.Entry(jeu).State = EntityState.Modified;
 
@@ -84,8 +87,26 @@ namespace WebApiRest.Controllers
         // POST api/Jeux
         public HttpResponseMessage PostJEU(JEU jeu)
         {
+            if (jeu.ID_JEU != -1)
+            {
+                if (GetJEU(jeu.ID_JEU) != null)
+                {
+                    var response = PutJEU(jeu.ID_JEU, jeu);
+                    return response;
+                }
+            }
+
             if (ModelState.IsValid)
             {
+                if (jeu.ID_JEU == -1)
+                {
+                    int maxValue = 0;
+                    foreach (var item in GetJEUs())
+                    {
+                        if (maxValue < item.ID_JEU) maxValue = item.ID_JEU;
+                    }
+                    jeu.ID_JEU = (maxValue + 1);
+                }
                 db.JEUs.Add(jeu);
                 db.SaveChanges();
 
